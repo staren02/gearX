@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>GearX — Gaming Gadgets</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="style.css"/>
+<script src="https://www.paypal.com/sdk/js?client-id=YOUR_PAYPAL_CLIENT_ID&currency=USD"></script>
+</head>
+<body>
+
+<!-- ============================================================
+     STORE PAGE
+     ============================================================ -->
+<div id="store-page">
+`
+  <!-- NAV -->
+  <nav id="navbar">
+    <div class="nav-logo">GEAR<span>X</span></div>
+    <div class="nav-links">
+      <a href="#hero">Home</a>
+      <a href="#categories">Categories</a>
+      <a href="#products">Shop</a>
+      <a href="#promo">Deals</a>
+    </div>
+    <div class="nav-right">
+      <button class="cart-btn" onclick="toggleCart()">
+        <span>🛒 Cart</span>
+        <span class="cart-count" id="cart-count">0</span>
+      </button>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section id="hero">
+    <div class="hero-bg"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-content">
+      <div class="hero-tag">⚡ New Arrivals Weekly</div>
+      <h1>
+        <span>Dominate</span>
+        <span class="line-blue">Your</span>
+        <span class="line-red">Game</span>
+      </h1>
+      <p class="hero-sub">Top-tier gaming gadgets. Controllers, headsets, VR and more — built for those who play to win.</p>
+      <div class="hero-actions">
+        <button class="btn-red" onclick="scrollToSection('products')">Shop Now</button>
+        <button class="btn-ghost" onclick="scrollToSection('promo')">View Deals</button>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><strong>500+</strong><span>Products</span></div>
+        <div class="hero-stat"><strong>12k+</strong><span>Customers</span></div>
+        <div class="hero-stat"><strong>4.9★</strong><span>Rated</span></div>
+      </div>
+    </div>
+    <div class="hero-deco">
+      <div class="hero-deco-ring ring1"></div>
+      <div class="hero-deco-ring ring2"></div>
+      <div class="hero-deco-ring ring3"></div>
+      <div class="hero-deco-center">🎮</div>
+    </div>
+  </section>
+
+  <!-- CATEGORIES -->
+  <section id="categories">
+    <div class="cat-header reveal">
+      <div>
+        <p class="sec-eyebrow">Browse</p>
+        <h2 class="sec-title">Categories</h2>
+      </div>
+    </div>
+    <div class="cat-grid reveal">
+      <div class="cat-card selected" onclick="filterCat('all', event)">
+        <span class="cat-emoji">🕹️</span>
+        <div class="cat-name">All</div>
+      </div>
+      <div class="cat-card" onclick="filterCat('Controllers', event)">
+        <span class="cat-emoji">🎮</span>
+        <div class="cat-name">Controllers</div>
+      </div>
+      <div class="cat-card" onclick="filterCat('Headsets', event)">
+        <span class="cat-emoji">🎧</span>
+        <div class="cat-name">Headsets</div>
+      </div>
+      <div class="cat-card" onclick="filterCat('Mice & KB', event)">
+        <span class="cat-emoji">🖱️</span>
+        <div class="cat-name">Mice & KB</div>
+      </div>
+      <div class="cat-card" onclick="filterCat('VR Gear', event)">
+        <span class="cat-emoji">🕶️</span>
+        <div class="cat-name">VR Gear</div>
+      </div>
+      <div class="cat-card" onclick="filterCat('Monitors', event)">
+        <span class="cat-emoji">🖥️</span>
+        <div class="cat-name">Monitors</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRODUCTS -->
+  <section id="products">
+    <div class="prod-header reveal">
+      <div>
+        <p class="sec-eyebrow">Featured</p>
+        <h2 class="sec-title">Top <span>Products</span></h2>
+      </div>
+    </div>
+    <div class="prod-grid" id="prod-grid"></div>
+  </section>
+
+  <!-- PROMO BANNER -->
+  <div id="promo" class="reveal">
+    <div>
+      <p class="promo-text">Flash Sale<em>Up to 40% Off</em></p>
+      <p class="promo-sub">Limited time — ends midnight tonight</p>
+    </div>
+    <button class="btn-red" onclick="scrollToSection('products')">Grab the Deal →</button>
+  </div>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <span class="nav-logo">GEAR<span>X</span></span>
+        <p>Your go-to store for premium gaming gadgets. Fast delivery, real gear, zero compromise.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Shop</h4>
+        <a href="#">Controllers</a>
+        <a href="#">Headsets</a>
+        <a href="#">Mice & KB</a>
+        <a href="#">VR Gear</a>
+      </div>
+      <div class="footer-col">
+        <h4>Support</h4>
+        <a href="#">FAQ</a>
+        <a href="#">Shipping</a>
+        <a href="#">Returns</a>
+        <a href="#">Contact</a>
+      </div>
+      <div class="footer-col">
+        <h4>Company</h4>
+        <a href="#">About</a>
+        <a href="#">Blog</a>
+        <a href="#">Privacy</a>
+        <a href="#">Terms</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>© 2026 GearX. All rights reserved.</p>
+      <a href="#" class="admin-link-foot" onclick="openAdminLogin(event)">Admin Portal</a>
+    </div>
+  </footer>
+
+</div><!-- end store-page -->
+
+
+<!-- ============================================================
+     CART DRAWER
+     ============================================================ -->
+<div id="cart-overlay" onclick="handleOverlayClick(event)">
+  <div id="cart-drawer">
+    <div class="cart-head">
+      <h2>Your Cart</h2>
+      <button class="cart-close" onclick="toggleCart()">✕</button>
+    </div>
+    <div class="cart-items" id="cart-items-list"></div>
+    <div class="cart-foot">
+      <div class="cart-summary" id="cart-summary"></div>
+      <button class="checkout-btn" id="checkout-trigger" onclick="openCheckout()">Proceed to Checkout</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================
+     CHECKOUT MODAL
+     ============================================================ -->
+<div id="checkout-modal">
+  <div class="checkout-box">
+    <div class="checkout-header">
+      <h2>Checkout</h2>
+      <button class="cart-close" onclick="closeCheckout()">✕</button>
+    </div>
+    <div class="checkout-body">
+
+      <!-- Step indicator dots -->
+      <div class="steps-indicator">
+        <div class="step-dot active" id="sdot-1"></div>
+        <div class="step-dot" id="sdot-2"></div>
+        <div class="step-dot" id="sdot-3"></div>
+        <span class="step-text" id="step-text-label">Shipping Details</span>
+      </div>
+
+      <!-- STEP 1: Shipping Details -->
+      <div class="checkout-step active" id="step-1">
+        <p class="step-label">Step 1 — Shipping Details</p>
+        <div class="form-row">
+          <div class="field">
+            <label>First Name</label>
+            <input type="text" id="sh-fname" placeholder="John"/>
+          </div>
+          <div class="field">
+            <label>Last Name</label>
+            <input type="text" id="sh-lname" placeholder="Doe"/>
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="field">
+            <label>Phone Number</label>
+            <input type="tel" id="sh-phone" placeholder="+1 234 567 8900"/>
+          </div>
+        </div>
+        <div class="form-row full">
+          <div class="field">
+            <label>Street Address</label>
+            <input type="text" id="sh-address" placeholder="123 Main Street, Apt 4B"/>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="field">
+            <label>City</label>
+            <input type="text" id="sh-city" placeholder="New York"/>
+          </div>
+          <div class="field">
+            <label>Country</label>
+            <select id="sh-country">
+              <option value="">Select country</option>
+              <option>United States</option>
+              <option>United Kingdom</option>
+              <option>Canada</option>
+              <option>Australia</option>
+              <option>Germany</option>
+              <option>France</option>
+              <option>Nigeria</option>
+              <option>South Africa</option>
+              <option>Kenya</option>
+              <option>Ghana</option>
+              <option>Cameroon</option>
+              <option>Other</option>
+            </select>
+          </div>
+        </div>
+        <div class="step-actions">
+          <button class="btn-next" onclick="goStep(2)">Continue to Order Review →</button>
+        </div>
+      </div>
+
+      <!-- STEP 2: Order Review -->
+      <div class="checkout-step" id="step-2">
+        <p class="step-label">Step 2 — Review Your Order</p>
+        <div class="order-summary-mini" id="order-review"></div>
+        <div class="delivery-preview-box">
+          <strong>Delivering to:</strong>
+          <span id="delivery-address-preview"></span>
+        </div>
+        <div class="paypal-note">
+          💳 Payment via PayPal — secure checkout. You will be redirected to PayPal to complete payment.
+        </div>
+        <div class="step-actions">
+          <button class="btn-back" onclick="goStep(1)">← Back</button>
+          <button class="btn-next" onclick="goStep(3)">Proceed to Payment →</button>
+        </div>
+      </div>
+
+      <!-- STEP 3: PayPal Payment -->
+      <div class="checkout-step" id="step-3">
+        <p class="step-label">Step 3 — Pay with PayPal</p>
+        <div class="order-summary-mini" id="paypal-order-summary"></div>
+        <div id="paypal-button-container"></div>
+        <div class="step-actions">
+          <button class="btn-back" onclick="goStep(2)">← Back</button>
+        </div>
+      </div>
+
+      <!-- STEP 4: Success Screen -->
+      <div class="checkout-step" id="step-4">
+        <div class="success-screen">
+          <span class="success-icon">🎉</span>
+          <h3>Order Confirmed!</h3>
+          <p>Your payment was successful. Your gaming gear is on its way!</p>
+          <div class="order-ref" id="order-ref-display"></div>
+          <p class="delivery-note">We'll send a confirmation to your shipping address. Estimated delivery: <strong>3–7 business days</strong></p>
+          <button class="btn-next full-btn" onclick="closeCheckout(); clearCart();">Continue Shopping</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================
+     ADMIN LOGIN MODAL
+     ============================================================ -->
+<div id="login-modal">
+  <div class="login-box">
+    <span class="nav-logo">GEAR<span>X</span></span>
+    <p>Admin Portal — Authorized Access Only</p>
+    <div class="login-field">
+      <label>Username</label>
+      <input type="text" id="adm-user" placeholder="admin"/>
+    </div>
+    <div class="login-field">
+      <label>Password</label>
+      <input type="password" id="adm-pass" placeholder="••••••••"
+             onkeydown="if(event.key==='Enter') doLogin()"/>
+    </div>
+    <button class="login-btn" onclick="doLogin()">Enter Dashboard</button>
+    <div class="login-err" id="login-err">Invalid credentials. Try again.</div>
+    <button class="login-back" onclick="closeAdminLogin()">← Back to Store</button>
+  </div>
+</div>
+
+
+<!-- ============================================================
+     ADMIN DASHBOARD PAGE
+     ============================================================ -->
+<div id="admin-page">
+
+  <nav class="adm-nav">
+    <span class="adm-nav-logo">GEAR<span>X</span> Admin</span>
+    <div class="adm-nav-right">
+      <span id="adm-date"></span>
+      <button class="adm-logout" onclick="logoutAdmin()">Logout</button>
+    </div>
+  </nav>
+
+  <div class="adm-body">
+
+    <!-- Sidebar -->
+    <aside class="adm-sidebar">
+      <ul class="adm-menu">
+        <li><a href="#" class="active" onclick="showAdmSection('dashboard', this)">📊 Dashboard</a></li>
+        <li><a href="#" onclick="showAdmSection('products', this)">📦 Products</a></li>
+        <li><a href="#" onclick="showAdmSection('orders', this)">📋 Orders</a></li>
+      </ul>
+    </aside>
+
+    <!-- Main content -->
+    <main class="adm-main">
+
+      <!-- DASHBOARD SECTION -->
+      <div class="adm-section active" id="adm-dashboard">
+        <h1 class="adm-page-title">Dashboard</h1>
+        <div class="adm-stats">
+          <div class="stat-card blue">
+            <div class="s-label">Total Products</div>
+            <div class="s-val" id="stat-prods">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="s-label">Categories</div>
+            <div class="s-val">6</div>
+          </div>
+          <div class="stat-card red">
+            <div class="s-label">Orders</div>
+            <div class="s-val" id="stat-orders">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="s-label">Revenue</div>
+            <div class="s-val" id="stat-rev">$0</div>
+          </div>
+        </div>
+        <div class="adm-card">
+          <div class="adm-card-head"><h3>Recent Orders</h3></div>
+          <div id="adm-recent-orders" class="no-data-msg">No orders yet.</div>
+        </div>
+      </div>
+
+      <!-- PRODUCTS SECTION -->
+      <div class="adm-section" id="adm-products">
+        <h1 class="adm-page-title">Products</h1>
+        <div class="adm-card">
+          <div class="adm-card-head">
+            <h3>All Products (<span id="prod-count-label">0</span>)</h3>
+            <button class="adm-btn-red" onclick="openProdModal()">+ Add Product</button>
+          </div>
+          <div class="adm-search">
+            <input type="text" id="prod-search" placeholder="Search products..." oninput="renderAdmTable()"/>
+          </div>
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>Icon</th><th>Name</th><th>Category</th>
+                <th>Price</th><th>Status</th><th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="adm-prod-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ORDERS SECTION -->
+      <div class="adm-section" id="adm-orders">
+        <h1 class="adm-page-title">Orders</h1>
+        <div class="adm-card">
+          <div class="adm-card-head">
+            <h3>All Orders (<span id="orders-count-label">0</span>)</h3>
+          </div>
+          <table class="adm-table">
+            <thead>
+              <tr>
+                <th>Order #</th><th>Customer</th><th>Items</th>
+                <th>Total</th><th>City</th><th>Date</th><th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="adm-orders-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+
+<!-- ============================================================
+     ADD / EDIT PRODUCT MODAL
+     ============================================================ -->
+<div id="prod-modal">
+  <div class="prod-modal-box">
+    <div class="prod-modal-head">
+      <h3 id="pm-title">Add Product</h3>
+      <button class="modal-close" onclick="closeProdModal()">✕</button>
+    </div>
+    <div class="prod-modal-body">
+      <input type="hidden" id="pm-id"/>
+      <div class="pm-row">
+        <div class="pm-field">
+          <label>Product Name</label>
+          <input type="text" id="pm-name" placeholder="e.g. ProSound X9"/>
+        </div>
+        <div class="pm-field">
+          <label>Category</label>
+          <select id="pm-cat">
+            <option>Controllers</option>
+            <option>Headsets</option>
+            <option>Mice & KB</option>
+            <option>VR Gear</option>
+            <option>Monitors</option>
+            <option>Chairs</option>
+          </select>
+        </div>
+      </div>
+      <div class="pm-row">
+        <div class="pm-field">
+          <label>Price (USD)</label>
+          <input type="number" id="pm-price" placeholder="0.00" step="0.01" min="0"/>
+        </div>
+        <div class="pm-field">
+          <label>Badge</label>
+          <select id="pm-badge">
+            <option value="">None</option>
+            <option value="new">New</option>
+            <option value="hot">Hot</option>
+            <option value="sale">Sale</option>
+          </select>
+        </div>
+      </div>
+      <div class="pm-field">
+        <label>Emoji Icon</label>
+        <input type="text" id="pm-icon" placeholder="🎮"/>
+      </div>
+      <div class="pm-field">
+        <label>Description</label>
+        <textarea id="pm-desc" placeholder="Short product description..."></textarea>
+      </div>
+      <div class="pm-field">
+        <label>Status</label>
+        <select id="pm-status">
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+      </div>
+      <div class="pm-actions">
+        <button class="pm-cancel" onclick="closeProdModal()">Cancel</button>
+        <button class="pm-save" onclick="saveProduct()">Save Product</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- Toast notification -->
+<div id="toast"></div>
+
+<!-- JavaScript (loaded last so the page HTML is ready first) -->
+<script src="script.js"></script>
+
+</body>
+</html>
