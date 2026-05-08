@@ -1,20 +1,17 @@
 /* ============================================================
-   GEARX GAMING STORE — JAVASCRIPT
-   script.js
-   ============================================================ */
+   GEARX GAMING STORE — JAVASCRIPT  (script.js)
+============================================================ */
 
 /* ============================================================
-   CONFIGURATION
-   Edit these values to change store settings
-   ============================================================ */
-const SHIPPING_FEE = 5; // Flat shipping fee in USD
-const ADMIN_USERNAME = "admin"; // Admin login username
-const ADMIN_PASSWORD = "gearx2026"; // Admin login password
+   CONFIGURATION  (editable via admin settings panel)
+============================================================ */
+let SHIPPING_FEE = parseFloat(localStorage.getItem("gearx_shipping")) || 5;
+let ADMIN_USERNAME = localStorage.getItem("gearx_adm_user") || "admin";
+let ADMIN_PASSWORD = localStorage.getItem("gearx_adm_pass") || "gearx2026";
 
 /* ============================================================
-   DEFAULT PRODUCT DATA
-   These load on first visit. After that, localStorage is used.
-   ============================================================ */
+   DEFAULT PRODUCTS
+============================================================ */
 const DEFAULT_PRODUCTS = [
   {
     id: 1,
@@ -68,7 +65,7 @@ const DEFAULT_PRODUCTS = [
   },
   {
     id: 6,
-    name: 'Titan 27" Gaming Monitor',
+    name: 'Titan 27" Monitor',
     cat: "Monitors",
     price: 349.99,
     badge: "sale",
@@ -80,10 +77,12 @@ const DEFAULT_PRODUCTS = [
 
 /* ============================================================
    APP STATE
-   ============================================================ */
+============================================================ */
 let products =
   JSON.parse(localStorage.getItem("gearx_products")) || DEFAULT_PRODUCTS;
 let orders = JSON.parse(localStorage.getItem("gearx_orders")) || [];
+let clients = JSON.parse(localStorage.getItem("gearx_clients")) || [];
+let currentUser = JSON.parse(sessionStorage.getItem("gearx_user")) || null;
 let cart = [];
 let nextProductId = Math.max(...products.map((p) => p.id), 0) + 1;
 let currentStep = 1;
@@ -93,22 +92,39 @@ let paypalRendered = false;
 let toastTimer;
 
 /* ============================================================
-   SAVE TO LOCAL STORAGE
-   ============================================================ */
+   PERSIST DATA
+============================================================ */
 function saveData() {
   localStorage.setItem("gearx_products", JSON.stringify(products));
   localStorage.setItem("gearx_orders", JSON.stringify(orders));
+  localStorage.setItem("gearx_clients", JSON.stringify(clients));
+}
+
+function saveCart() {
+  // Save cart against logged-in user so it persists across sessions
+  if (currentUser) {
+    const carts = JSON.parse(localStorage.getItem("gearx_carts") || "{}");
+    carts[currentUser.email] = cart;
+    localStorage.setItem("gearx_carts", JSON.stringify(carts));
+  }
+}
+
+function loadUserCart() {
+  if (currentUser) {
+    const carts = JSON.parse(localStorage.getItem("gearx_carts") || "{}");
+    cart = carts[currentUser.email] || [];
+  } else {
+    cart = [];
+  }
 }
 
 /* ============================================================
-   SCROLL REVEAL (runs on page load)
-   ============================================================ */
+   SCROLL REVEAL
+============================================================ */
 const revealObserver = new IntersectionObserver(
   (entries) => {
-    entries.forEach((entry) => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("visible");
-      }
+    entries.forEach((e) => {
+      if (e.isIntersecting) e.target.classList.add("visible");
     });
   },
   { threshold: 0.12 },
@@ -125,14 +141,271 @@ function scrollToSection(id) {
 }
 
 /* ============================================================
-   PRODUCTS — STOREFRONT
-   ============================================================ */
+   MOBILE NAV MENU
+============================================================ */
+function toggleMenu() {
+  const links = document.getElementById("nav-links");
+  const burger = document.getElementById("hamburger");
+  const overlay = document.getElementById("mobile-overlay");
+  const isOpen = links.classList.toggle("open");
+  burger.classList.toggle("open", isOpen);
+  overlay.classList.toggle("show", isOpen);
+}
 
-/** Render product cards on the storefront */
+function closeMenu() {
+  document.getElementById("nav-links").classList.remove("open");
+  document.getElementById("hamburger").classList.remove("open");
+  document.getElementById("mobile-overlay").classList.remove("show");
+}
+
+/* ============================================================
+   ADMIN SIDEBAR TOGGLE (mobile)
+============================================================ */
+function toggleAdmSidebar() {
+  document.getElementById("adm-sidebar").classList.toggle("open");
+  document.getElementById("adm-sidebar-overlay").classList.toggle("show");
+}
+
+function closeAdmSidebar() {
+  document.getElementById("adm-sidebar").classList.remove("open");
+  document.getElementById("adm-sidebar-overlay").classList.remove("show");
+}
+
+/* ============================================================
+   AUTH DRAWER — OPEN / CLOSE / TAB SWITCH
+============================================================ */
+function toggleAuthDrawer() {
+  const overlay = document.getElementById("auth-overlay");
+  const isOpen = overlay.classList.toggle("open");
+  if (isOpen) updateAuthDrawerUI();
+}
+
+function handleAuthOverlayClick(e) {
+  if (e.target === document.getElementById("auth-overlay")) toggleAuthDrawer();
+}
+
+function switchAuthTab(tab) {
+  // Toggle tab buttons
+  document
+    .getElementById("tab-login")
+    .classList.toggle("active", tab === "login");
+  document
+    .getElementById("tab-register")
+    .classList.toggle("active", tab === "register");
+
+  // Show correct form
+  document
+    .getElementById("auth-login-form")
+    .classList.toggle("active", tab === "login");
+  document
+    .getElementById("auth-register-form")
+    .classList.toggle("active", tab === "register");
+  document.getElementById("auth-loggedin-form").classList.remove("active");
+
+  // Update title
+  document.getElementById("auth-drawer-title").textContent =
+    tab === "login" ? "Welcome Back" : "Create Account";
+
+  // Clear errors
+  clearAuthErr("login-err");
+  clearAuthErr("register-err");
+}
+
+/** Update the auth drawer based on login state */
+function updateAuthDrawerUI() {
+  if (currentUser) {
+    // Show logged-in profile view
+    document.getElementById("auth-login-form").classList.remove("active");
+    document.getElementById("auth-register-form").classList.remove("active");
+    document.getElementById("auth-loggedin-form").classList.add("active");
+    document.getElementById("auth-drawer-title").textContent = "My Account";
+
+    const initials = (
+      currentUser.firstName[0] + currentUser.lastName[0]
+    ).toUpperCase();
+    document.getElementById("user-avatar").textContent = initials;
+    document.getElementById("user-display-name").textContent =
+      `${currentUser.firstName} ${currentUser.lastName}`;
+    document.getElementById("user-display-email").textContent =
+      currentUser.email;
+
+    const userOrders = orders.filter(
+      (o) => o.userEmail === currentUser.email,
+    ).length;
+    document.getElementById("ustat-orders").textContent = userOrders;
+    document.getElementById("ustat-cart").textContent = cart.reduce(
+      (s, i) => s + i.qty,
+      0,
+    );
+  } else {
+    switchAuthTab("login");
+  }
+}
+
+/** Update nav button based on login state */
+function updateNavAuth() {
+  const btn = document.getElementById("auth-nav-btn");
+  if (currentUser) {
+    document.getElementById("auth-nav-label").textContent =
+      `👤 ${currentUser.firstName}`;
+    btn.classList.add("logged-in");
+  } else {
+    document.getElementById("auth-nav-label").textContent = "🔑 Login";
+    btn.classList.remove("logged-in");
+  }
+}
+
+function showAuthErr(elId, msg) {
+  const el = document.getElementById(elId);
+  el.textContent = msg;
+  el.classList.add("show");
+  el.style.display = "block";
+}
+
+function clearAuthErr(elId) {
+  const el = document.getElementById(elId);
+  el.classList.remove("show");
+  el.style.display = "none";
+}
+
+/* ============================================================
+   CLIENT REGISTRATION
+============================================================ */
+function doRegister() {
+  clearAuthErr("register-err");
+
+  const firstName = document.getElementById("reg-fname").value.trim();
+  const lastName = document.getElementById("reg-lname").value.trim();
+  const username = document
+    .getElementById("reg-username")
+    .value.trim()
+    .toLowerCase();
+  const email = document.getElementById("reg-email").value.trim().toLowerCase();
+  const password = document.getElementById("reg-password").value;
+  const confirm = document.getElementById("reg-confirm").value;
+
+  // Validation
+  if (!firstName || !lastName || !username || !email || !password) {
+    return showAuthErr("register-err", "Please fill in all fields.");
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return showAuthErr("register-err", "Please enter a valid email address.");
+  }
+  if (username.length < 3) {
+    return showAuthErr(
+      "register-err",
+      "Username must be at least 3 characters.",
+    );
+  }
+  if (password.length < 6) {
+    return showAuthErr(
+      "register-err",
+      "Password must be at least 6 characters.",
+    );
+  }
+  if (password !== confirm) {
+    return showAuthErr("register-err", "Passwords do not match.");
+  }
+
+  // Check duplicates
+  if (clients.find((c) => c.email === email)) {
+    return showAuthErr(
+      "register-err",
+      "An account with this email already exists.",
+    );
+  }
+  if (clients.find((c) => c.username === username)) {
+    return showAuthErr("register-err", "This username is already taken.");
+  }
+
+  // Create account
+  const newClient = {
+    id: Date.now(),
+    firstName,
+    lastName,
+    username,
+    email,
+    password, // NOTE: in production use a backend with hashed passwords
+    joined: new Date().toLocaleDateString(),
+  };
+  clients.push(newClient);
+  saveData();
+
+  // Auto-login after registration
+  loginUser(newClient);
+  showToast(`Welcome to GearX, ${firstName}! 🎮`);
+  toggleAuthDrawer();
+}
+
+/* ============================================================
+   CLIENT LOGIN
+============================================================ */
+function doClientLogin() {
+  clearAuthErr("login-err");
+
+  const identifier = document
+    .getElementById("login-identifier")
+    .value.trim()
+    .toLowerCase();
+  const password = document.getElementById("login-password").value;
+
+  if (!identifier || !password) {
+    return showAuthErr("login-err", "Please fill in all fields.");
+  }
+
+  // Match by email OR username
+  const client = clients.find(
+    (c) =>
+      (c.email === identifier || c.username === identifier) &&
+      c.password === password,
+  );
+
+  if (!client) {
+    return showAuthErr("login-err", "Incorrect email/username or password.");
+  }
+
+  loginUser(client);
+  showToast(`Welcome back, ${client.firstName}! 🎮`);
+  toggleAuthDrawer();
+}
+
+function loginUser(client) {
+  currentUser = client;
+  sessionStorage.setItem("gearx_user", JSON.stringify(client));
+  loadUserCart(); // restore their saved cart
+  updateNavAuth();
+  updateCartUI();
+}
+
+function doClientLogout() {
+  saveCart(); // save cart before logging out
+  currentUser = null;
+  cart = [];
+  sessionStorage.removeItem("gearx_user");
+  updateNavAuth();
+  updateCartUI();
+  toggleAuthDrawer();
+  showToast("You have been logged out.");
+}
+
+/* Show / hide password */
+function togglePw(inputId, btn) {
+  const input = document.getElementById(inputId);
+  if (input.type === "password") {
+    input.type = "text";
+    btn.textContent = "🙈";
+  } else {
+    input.type = "password";
+    btn.textContent = "👁";
+  }
+}
+
+/* ============================================================
+   PRODUCTS — STOREFRONT
+============================================================ */
 function renderProducts(cat = "all") {
   activeCategory = cat;
   const grid = document.getElementById("prod-grid");
-
   const filtered =
     cat === "all"
       ? products.filter((p) => p.status === "active")
@@ -147,7 +420,7 @@ function renderProducts(cat = "all") {
   grid.innerHTML = filtered
     .map(
       (p, i) => `
-    <div class="prod-card reveal" style="transition-delay: ${i * 0.07}s">
+    <div class="prod-card reveal" style="transition-delay:${i * 0.07}s">
       <div class="prod-img-wrap">
         ${p.badge ? `<span class="prod-badge-${p.badge}">${p.badge.toUpperCase()}</span>` : ""}
         ${p.icon}
@@ -161,18 +434,14 @@ function renderProducts(cat = "all") {
           <button class="add-cart-btn" onclick="addToCart(${p.id})" title="Add to cart">+</button>
         </div>
       </div>
-    </div>
-  `,
+    </div>`,
     )
     .join("");
 
-  // Re-observe newly created product cards for scroll reveal
   grid.querySelectorAll(".reveal").forEach((el) => revealObserver.observe(el));
 }
 
-/** Filter products by category when a category card is clicked */
 function filterCat(cat, event) {
-  activeCategory = cat;
   document
     .querySelectorAll(".cat-card")
     .forEach((c) => c.classList.remove("selected"));
@@ -182,26 +451,27 @@ function filterCat(cat, event) {
 }
 
 /* ============================================================
-   CART — ADD / REMOVE / QUANTITY
-   ============================================================ */
-
+   CART
+============================================================ */
 function addToCart(productId) {
+  if (!currentUser) {
+    showToast("Please login to add items to your cart 🔑", true);
+    toggleAuthDrawer();
+    return;
+  }
   const product = products.find((p) => p.id === productId);
   if (!product) return;
-
-  const existing = cart.find((item) => item.id === productId);
-  if (existing) {
-    existing.qty++;
-  } else {
-    cart.push({ ...product, qty: 1 });
-  }
-
+  const existing = cart.find((i) => i.id === productId);
+  if (existing) existing.qty++;
+  else cart.push({ ...product, qty: 1 });
+  saveCart();
   updateCartUI();
   showToast(`${product.icon} ${product.name} added to cart!`);
 }
 
 function removeFromCart(productId) {
-  cart = cart.filter((item) => item.id !== productId);
+  cart = cart.filter((i) => i.id !== productId);
+  saveCart();
   updateCartUI();
 }
 
@@ -209,53 +479,44 @@ function changeQty(productId, delta) {
   const item = cart.find((i) => i.id === productId);
   if (!item) return;
   item.qty += delta;
-  if (item.qty <= 0) {
-    removeFromCart(productId);
-  } else {
+  if (item.qty <= 0) removeFromCart(productId);
+  else {
+    saveCart();
     updateCartUI();
   }
 }
 
 function cartSubtotal() {
-  return cart.reduce((sum, item) => sum + item.price * item.qty, 0);
+  return cart.reduce((s, i) => s + i.price * i.qty, 0);
 }
-
 function cartTotal() {
-  return cartSubtotal() + (cart.length > 0 ? SHIPPING_FEE : 0);
+  return cartSubtotal() + (cart.length ? SHIPPING_FEE : 0);
 }
-
 function clearCart() {
   cart = [];
+  saveCart();
   updateCartUI();
 }
 
 /* ============================================================
-   CART — UI UPDATE
-   ============================================================ */
-
+   CART UI
+============================================================ */
 function updateCartUI() {
-  const totalItems = cart.reduce((sum, item) => sum + item.qty, 0);
-  document.getElementById("cart-count").textContent = totalItems;
+  const count = cart.reduce((s, i) => s + i.qty, 0);
+  document.getElementById("cart-count").textContent = count;
 
   const itemsList = document.getElementById("cart-items-list");
   const summaryEl = document.getElementById("cart-summary");
   const checkoutBtn = document.getElementById("checkout-trigger");
 
-  // Empty cart state
   if (!cart.length) {
-    itemsList.innerHTML = `
-      <div class="cart-empty">
-        <span class="icon">🛒</span>
-        <p>Your cart is empty.</p>
-      </div>`;
+    itemsList.innerHTML = `<div class="cart-empty"><span class="icon">🛒</span><p>${currentUser ? "Your cart is empty." : "Login to save your cart."}</p></div>`;
     summaryEl.innerHTML = "";
     checkoutBtn.disabled = true;
     return;
   }
 
   checkoutBtn.disabled = false;
-
-  // Render cart items
   itemsList.innerHTML = cart
     .map(
       (item) => `
@@ -265,46 +526,41 @@ function updateCartUI() {
         <div class="cart-item-name">${item.name}</div>
         <div class="cart-item-price">$${(item.price * item.qty).toFixed(2)}</div>
         <div class="cart-item-qty">
-          <button class="qty-btn" onclick="changeQty(${item.id}, -1)">−</button>
+          <button class="qty-btn" onclick="changeQty(${item.id},-1)">−</button>
           <span class="qty-val">${item.qty}</span>
-          <button class="qty-btn" onclick="changeQty(${item.id}, 1)">+</button>
+          <button class="qty-btn" onclick="changeQty(${item.id},1)">+</button>
         </div>
       </div>
       <button class="cart-rm" onclick="removeFromCart(${item.id})">🗑</button>
-    </div>
-  `,
+    </div>`,
     )
     .join("");
 
-  // Render price summary
   summaryEl.innerHTML = `
     <div class="cart-summary-row"><span>Subtotal</span><span>$${cartSubtotal().toFixed(2)}</span></div>
     <div class="cart-summary-row"><span>Shipping</span><span>$${SHIPPING_FEE.toFixed(2)}</span></div>
     <div class="cart-summary-row total"><span>Total</span><span>$${cartTotal().toFixed(2)}</span></div>`;
 }
 
-/* ============================================================
-   CART DRAWER — OPEN / CLOSE
-   ============================================================ */
-
 function toggleCart() {
   document.getElementById("cart-overlay").classList.toggle("open");
 }
 
-function handleOverlayClick(event) {
-  // Close cart if user clicks the dark overlay (not the drawer itself)
-  if (event.target === document.getElementById("cart-overlay")) {
-    toggleCart();
-  }
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById("cart-overlay")) toggleCart();
 }
 
 /* ============================================================
-   CHECKOUT MODAL — OPEN / CLOSE / STEP NAVIGATION
-   ============================================================ */
-
+   CHECKOUT
+============================================================ */
 function openCheckout() {
   if (!cart.length) return;
-  toggleCart(); // close cart drawer first
+  toggleCart();
+  // Pre-fill shipping with user's name if logged in
+  if (currentUser) {
+    document.getElementById("sh-fname").value = currentUser.firstName;
+    document.getElementById("sh-lname").value = currentUser.lastName;
+  }
   document.getElementById("checkout-modal").classList.add("open");
   goStep(1);
 }
@@ -313,44 +569,32 @@ function closeCheckout() {
   document.getElementById("checkout-modal").classList.remove("open");
 }
 
-function goStep(stepNumber) {
-  currentStep = stepNumber;
-
-  // Run step-specific logic
-  if (stepNumber === 2) {
-    if (!validateShipping()) return; // stop if shipping is incomplete
+function goStep(n) {
+  currentStep = n;
+  if (n === 2) {
+    if (!validateShipping()) return;
     buildOrderReview();
   }
-  if (stepNumber === 3) {
+  if (n === 3) {
     buildPayPalSummary();
     initPayPal();
   }
 
-  // Show only the active step panel
-  document.querySelectorAll(".checkout-step").forEach((panel, index) => {
-    panel.classList.toggle("active", index === stepNumber - 1);
+  document.querySelectorAll(".checkout-step").forEach((p, i) => {
+    p.classList.toggle("active", i === n - 1);
   });
-
-  // Update step indicator dots
   [1, 2, 3].forEach((i) => {
     const dot = document.getElementById(`sdot-${i}`);
     dot.classList.remove("active", "done");
-    if (i === stepNumber) dot.classList.add("active");
-    else if (i < stepNumber) dot.classList.add("done");
+    if (i === n) dot.classList.add("active");
+    else if (i < n) dot.classList.add("done");
   });
-
-  // Update step label text
-  const stepLabels = { 1: "Shipping Details", 2: "Review Order", 3: "Payment" };
-  document.getElementById("step-text-label").textContent =
-    stepLabels[stepNumber] || "";
+  const labels = { 1: "Shipping Details", 2: "Review Order", 3: "Payment" };
+  document.getElementById("step-text-label").textContent = labels[n] || "";
 }
 
-/* ============================================================
-   CHECKOUT — SHIPPING VALIDATION & DATA
-   ============================================================ */
-
 function validateShipping() {
-  const requiredFields = [
+  const fields = [
     "sh-fname",
     "sh-lname",
     "sh-phone",
@@ -358,11 +602,10 @@ function validateShipping() {
     "sh-city",
     "sh-country",
   ];
-  for (const fieldId of requiredFields) {
-    const field = document.getElementById(fieldId);
-    if (!field.value.trim()) {
+  for (const id of fields) {
+    if (!document.getElementById(id).value.trim()) {
       showToast("Please fill in all shipping fields.", true);
-      field.focus();
+      document.getElementById(id).focus();
       return false;
     }
   }
@@ -380,9 +623,9 @@ function getShippingDetails() {
 }
 
 function buildOrderReview() {
-  const shipping = getShippingDetails();
+  const sh = getShippingDetails();
   document.getElementById("delivery-address-preview").textContent =
-    `${shipping.name} · ${shipping.phone} · ${shipping.address}, ${shipping.city}, ${shipping.country}`;
+    `${sh.name} · ${sh.phone} · ${sh.address}, ${sh.city}, ${sh.country}`;
   document.getElementById("order-review").innerHTML = buildOrderSummaryHTML();
 }
 
@@ -391,20 +634,14 @@ function buildPayPalSummary() {
     buildOrderSummaryHTML();
 }
 
-/** Returns the HTML for the mini order summary shown in steps 2 and 3 */
 function buildOrderSummaryHTML() {
-  const itemRows = cart
-    .map(
-      (item) =>
-        `<div class="osi-row">
-       <span>${item.icon} ${item.name} × ${item.qty}</span>
-       <span>$${(item.price * item.qty).toFixed(2)}</span>
-     </div>`,
-    )
-    .join("");
-
   return (
-    itemRows +
+    cart
+      .map(
+        (i) =>
+          `<div class="osi-row"><span>${i.icon} ${i.name} × ${i.qty}</span><span>$${(i.price * i.qty).toFixed(2)}</span></div>`,
+      )
+      .join("") +
     `
     <div class="osi-row"><span>Shipping</span><span>$${SHIPPING_FEE.toFixed(2)}</span></div>
     <div class="osi-row bold"><span>Total</span><span>$${cartTotal().toFixed(2)}</span></div>`
@@ -412,58 +649,44 @@ function buildOrderSummaryHTML() {
 }
 
 /* ============================================================
-   PAYPAL INTEGRATION
-   ============================================================ */
-
+   PAYPAL
+============================================================ */
 function initPayPal() {
   const container = document.getElementById("paypal-button-container");
-
-  // Clear previous PayPal button if it was already rendered
   if (paypalRendered) {
     container.innerHTML = "";
     paypalRendered = false;
   }
 
-  // Check if PayPal SDK loaded (requires a valid Client ID in index.html)
   if (typeof paypal === "undefined") {
     container.innerHTML =
-      '<p style="color:#ff4444;font-size:13px;">PayPal not loaded. Please replace YOUR_PAYPAL_CLIENT_ID in index.html with your real Live Client ID.</p>';
+      '<p style="color:#ff4444;font-size:13px;">PayPal not loaded. Replace YOUR_PAYPAL_CLIENT_ID in index.html with your real Live Client ID.</p>';
     return;
   }
-
   paypalRendered = true;
 
   paypal
     .Buttons({
       style: { layout: "vertical", color: "blue", shape: "rect", label: "pay" },
-
-      // Step 1: Create the PayPal order
-      createOrder: (data, actions) => {
-        return actions.order.create({
+      createOrder: (data, actions) =>
+        actions.order.create({
           purchase_units: [
             {
-              amount: {
-                value: cartTotal().toFixed(2),
-                currency_code: "USD",
-              },
-              description: `GearX Order — ${cart.map((i) => i.name).join(", ")}`,
+              amount: { value: cartTotal().toFixed(2), currency_code: "USD" },
+              description: `GearX Order`,
             },
           ],
-        });
-      },
-
-      // Step 2: After customer approves payment
-      onApprove: (data, actions) => {
-        return actions.order.capture().then((details) => {
-          const shipping = getShippingDetails();
+        }),
+      onApprove: (data, actions) =>
+        actions.order.capture().then((details) => {
+          const sh = getShippingDetails();
           const orderNum = "GX-" + Date.now().toString(36).toUpperCase();
-
-          // Save the order
           const newOrder = {
             id: orderNum,
-            customer: shipping.name,
-            phone: shipping.phone,
-            address: `${shipping.address}, ${shipping.city}, ${shipping.country}`,
+            userEmail: currentUser ? currentUser.email : "guest",
+            customer: sh.name,
+            phone: sh.phone,
+            address: `${sh.address}, ${sh.city}, ${sh.country}`,
             items: cart.map((i) => ({
               name: i.name,
               qty: i.qty,
@@ -474,18 +697,12 @@ function initPayPal() {
             paypalId: details.id,
             status: "Paid",
           };
-
-          orders.unshift(newOrder); // add to top of orders list
+          orders.unshift(newOrder);
           saveData();
-
-          // Show success screen
           document.getElementById("order-ref-display").textContent =
             `Order #${orderNum} · PayPal: ${details.id}`;
           goStep(4);
-        });
-      },
-
-      // Payment failed or was cancelled
+        }),
       onError: (err) => {
         showToast("Payment failed. Please try again.", true);
         console.error("PayPal error:", err);
@@ -495,11 +712,10 @@ function initPayPal() {
 }
 
 /* ============================================================
-   ADMIN — LOGIN / LOGOUT
-   ============================================================ */
-
-function openAdminLogin(event) {
-  event.preventDefault();
+   ADMIN LOGIN / LOGOUT
+============================================================ */
+function openAdminLogin(e) {
+  e.preventDefault();
   document.getElementById("login-modal").classList.add("open");
   document.getElementById("login-err").style.display = "none";
   document.getElementById("adm-user").value = "";
@@ -511,10 +727,9 @@ function closeAdminLogin() {
 }
 
 function doLogin() {
-  const username = document.getElementById("adm-user").value.trim();
-  const password = document.getElementById("adm-pass").value;
-
-  if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+  const u = document.getElementById("adm-user").value.trim();
+  const p = document.getElementById("adm-pass").value;
+  if (u === ADMIN_USERNAME && p === ADMIN_PASSWORD) {
     closeAdminLogin();
     document.getElementById("store-page").style.display = "none";
     document.getElementById("admin-page").classList.add("active");
@@ -524,6 +739,9 @@ function doLogin() {
         month: "short",
         day: "numeric",
       });
+    // Populate settings fields with current values
+    document.getElementById("set-username").value = ADMIN_USERNAME;
+    document.getElementById("set-shipping").value = SHIPPING_FEE;
     refreshAdminData();
   } else {
     document.getElementById("login-err").style.display = "block";
@@ -536,53 +754,40 @@ function logoutAdmin() {
 }
 
 /* ============================================================
-   ADMIN — SECTION SWITCHER (Dashboard / Products / Orders)
-   ============================================================ */
-
-function showAdmSection(sectionName, clickedLink) {
-  // Hide all sections
+   ADMIN — SECTION SWITCHER
+============================================================ */
+function showAdmSection(name, el) {
   document
     .querySelectorAll(".adm-section")
     .forEach((s) => s.classList.remove("active"));
-  // Remove active from all menu links
   document
     .querySelectorAll(".adm-menu a")
     .forEach((a) => a.classList.remove("active"));
-
-  // Show selected section and mark link as active
-  document.getElementById(`adm-${sectionName}`).classList.add("active");
-  clickedLink.classList.add("active");
+  document.getElementById(`adm-${name}`).classList.add("active");
+  el.classList.add("active");
+  closeAdmSidebar(); // close sidebar on mobile after nav
 }
 
 /* ============================================================
-   ADMIN — DATA REFRESH (stats, tables)
-   ============================================================ */
-
+   ADMIN — REFRESH DATA
+============================================================ */
 function refreshAdminData() {
-  // Update stat cards
   document.getElementById("stat-prods").textContent = products.length;
   document.getElementById("stat-orders").textContent = orders.length;
-
-  const totalRevenue = orders.reduce((sum, order) => sum + order.total, 0);
-  document.getElementById("stat-rev").textContent =
-    "$" + totalRevenue.toFixed(2);
-
+  document.getElementById("stat-clients").textContent = clients.length;
+  const rev = orders.reduce((s, o) => s + o.total, 0);
+  document.getElementById("stat-rev").textContent = "$" + rev.toFixed(2);
   renderAdmTable();
   renderOrdersTable();
+  renderClientsTable();
   renderRecentOrders();
 }
 
-/** Render the products table in the admin panel */
 function renderAdmTable() {
-  const searchQuery = (
-    document.getElementById("prod-search")?.value || ""
-  ).toLowerCase();
+  const q = (document.getElementById("prod-search")?.value || "").toLowerCase();
   const filtered = products.filter(
-    (p) =>
-      p.name.toLowerCase().includes(searchQuery) ||
-      p.cat.toLowerCase().includes(searchQuery),
+    (p) => p.name.toLowerCase().includes(q) || p.cat.toLowerCase().includes(q),
   );
-
   document.getElementById("prod-count-label").textContent = filtered.length;
   document.getElementById("adm-prod-tbody").innerHTML = filtered
     .map(
@@ -593,104 +798,102 @@ function renderAdmTable() {
       <td>${p.cat}</td>
       <td>$${p.price.toFixed(2)}</td>
       <td><span class="badge-${p.status}">${p.status.charAt(0).toUpperCase() + p.status.slice(1)}</span></td>
-      <td>
-        <span class="tbl-edit" onclick="openProdModal(${p.id})">Edit</span>
-        <span class="tbl-del"  onclick="deleteProduct(${p.id})">Delete</span>
-      </td>
-    </tr>
-  `,
+      <td><span class="tbl-edit" onclick="openProdModal(${p.id})">Edit</span><span class="tbl-del" onclick="deleteProduct(${p.id})">Delete</span></td>
+    </tr>`,
     )
     .join("");
 }
 
-/** Render the orders table in the admin panel */
 function renderOrdersTable() {
   document.getElementById("orders-count-label").textContent = orders.length;
-
-  if (!orders.length) {
-    document.getElementById("adm-orders-tbody").innerHTML =
-      '<tr><td colspan="7" style="text-align:center;color:#888;padding:24px;">No orders yet.</td></tr>';
-    return;
-  }
-
-  document.getElementById("adm-orders-tbody").innerHTML = orders
-    .map(
-      (order) => `
-    <tr>
-      <td><strong>${order.id}</strong></td>
-      <td>${order.customer}<br><small style="color:#888">${order.phone}</small></td>
-      <td>${order.items.map((i) => `${i.name} ×${i.qty}`).join("<br>")}</td>
-      <td>$${order.total.toFixed(2)}</td>
-      <td>${order.address.split(",").slice(-2).join(",")}</td>
-      <td>${order.date}</td>
-      <td><span class="badge-active">${order.status}</span></td>
-    </tr>
-  `,
-    )
-    .join("");
+  document.getElementById("adm-orders-tbody").innerHTML = orders.length
+    ? orders
+        .map(
+          (o) => `
+      <tr>
+        <td><strong>${o.id}</strong></td>
+        <td>${o.customer}<br><small style="color:#888">${o.phone}</small></td>
+        <td>${o.items.map((i) => `${i.name} ×${i.qty}`).join("<br>")}</td>
+        <td>$${o.total.toFixed(2)}</td>
+        <td>${o.address.split(",").slice(-2).join(",")}</td>
+        <td>${o.date}</td>
+        <td><span class="badge-active">${o.status}</span></td>
+      </tr>`,
+        )
+        .join("")
+    : '<tr><td colspan="7" style="text-align:center;color:#888;padding:24px;">No orders yet.</td></tr>';
 }
 
-/** Render recent orders in the dashboard overview */
-function renderRecentOrders() {
-  const container = document.getElementById("adm-recent-orders");
+function renderClientsTable() {
+  document.getElementById("clients-count-label").textContent = clients.length;
+  document.getElementById("adm-clients-tbody").innerHTML = clients.length
+    ? clients
+        .map((c) => {
+          const userOrderCount = orders.filter(
+            (o) => o.userEmail === c.email,
+          ).length;
+          return `
+          <tr>
+            <td><strong>${c.firstName} ${c.lastName}</strong></td>
+            <td>${c.username}</td>
+            <td>${c.email}</td>
+            <td>${c.joined}</td>
+            <td>${userOrderCount}</td>
+          </tr>`;
+        })
+        .join("")
+    : '<tr><td colspan="5" style="text-align:center;color:#888;padding:24px;">No clients registered yet.</td></tr>';
+}
 
+function renderRecentOrders() {
+  const el = document.getElementById("adm-recent-orders");
   if (!orders.length) {
-    container.innerHTML =
+    el.innerHTML =
       '<p style="text-align:center;padding:20px;color:#888;">No orders yet.</p>';
     return;
   }
-
-  container.innerHTML = `
-    <table class="adm-table">
-      <thead>
-        <tr><th>Order #</th><th>Customer</th><th>Total</th><th>Date</th><th>Status</th></tr>
-      </thead>
-      <tbody>
-        ${orders
+  el.innerHTML = `
+    <div class="table-scroll">
+      <table class="adm-table">
+        <thead><tr><th>Order #</th><th>Customer</th><th>Total</th><th>Date</th><th>Status</th></tr></thead>
+        <tbody>${orders
           .slice(0, 5)
           .map(
             (o) => `
           <tr>
-            <td>${o.id}</td>
-            <td>${o.customer}</td>
-            <td>$${o.total.toFixed(2)}</td>
-            <td>${o.date}</td>
+            <td>${o.id}</td><td>${o.customer}</td>
+            <td>$${o.total.toFixed(2)}</td><td>${o.date}</td>
             <td><span class="badge-active">${o.status}</span></td>
-          </tr>
-        `,
+          </tr>`,
           )
           .join("")}
-      </tbody>
-    </table>`;
+        </tbody>
+      </table>
+    </div>`;
 }
 
 /* ============================================================
-   ADMIN — PRODUCT CRUD (Create, Read, Update, Delete)
-   ============================================================ */
-
-/** Open modal for adding a new product or editing an existing one */
-function openProdModal(productId = null) {
-  editingId = productId;
+   ADMIN — PRODUCT CRUD
+============================================================ */
+function openProdModal(id = null) {
+  editingId = id;
   document.getElementById("prod-modal").classList.add("open");
-
-  if (productId) {
-    // EDIT MODE — populate form with existing product data
-    const product = products.find((p) => p.id === productId);
+  if (id) {
+    const p = products.find((x) => x.id === id);
     document.getElementById("pm-title").textContent = "Edit Product";
-    document.getElementById("pm-id").value = product.id;
-    document.getElementById("pm-name").value = product.name;
-    document.getElementById("pm-cat").value = product.cat;
-    document.getElementById("pm-price").value = product.price;
-    document.getElementById("pm-badge").value = product.badge;
-    document.getElementById("pm-icon").value = product.icon;
-    document.getElementById("pm-desc").value = product.desc;
-    document.getElementById("pm-status").value = product.status;
+    document.getElementById("pm-id").value = p.id;
+    document.getElementById("pm-name").value = p.name;
+    document.getElementById("pm-cat").value = p.cat;
+    document.getElementById("pm-price").value = p.price;
+    document.getElementById("pm-badge").value = p.badge;
+    document.getElementById("pm-icon").value = p.icon;
+    document.getElementById("pm-desc").value = p.desc;
+    document.getElementById("pm-status").value = p.status;
   } else {
-    // ADD MODE — clear the form
     document.getElementById("pm-title").textContent = "Add Product";
-    ["pm-id", "pm-name", "pm-price", "pm-icon", "pm-desc"].forEach((id) => {
-      document.getElementById(id).value = "";
-    });
+    ["pm-id", "pm-name", "pm-price", "pm-icon", "pm-desc"].forEach(
+      (fid) => (document.getElementById(fid).value = ""),
+    );
     document.getElementById("pm-cat").value = "Controllers";
     document.getElementById("pm-badge").value = "";
     document.getElementById("pm-status").value = "active";
@@ -701,19 +904,16 @@ function closeProdModal() {
   document.getElementById("prod-modal").classList.remove("open");
 }
 
-/** Save product — handles both add and edit */
 function saveProduct() {
   const name = document.getElementById("pm-name").value.trim();
   const price = parseFloat(document.getElementById("pm-price").value);
   const icon = document.getElementById("pm-icon").value.trim();
-
-  // Basic validation
   if (!name || !price || !icon) {
     showToast("Please fill in name, price and icon.", true);
     return;
   }
 
-  const productData = {
+  const data = {
     name,
     price,
     cat: document.getElementById("pm-cat").value,
@@ -724,27 +924,23 @@ function saveProduct() {
   };
 
   if (editingId) {
-    // Update existing product
-    const index = products.findIndex((p) => p.id === editingId);
-    products[index] = { ...products[index], ...productData };
+    const idx = products.findIndex((p) => p.id === editingId);
+    products[idx] = { ...products[idx], ...data };
     showToast("Product updated!");
   } else {
-    // Add new product
-    products.push({ id: nextProductId++, ...productData });
+    products.push({ id: nextProductId++, ...data });
     showToast("Product added!");
   }
 
   saveData();
   closeProdModal();
-  renderProducts(activeCategory); // refresh storefront
-  refreshAdminData(); // refresh admin tables
+  renderProducts(activeCategory);
+  refreshAdminData();
 }
 
-/** Delete a product after confirmation */
-function deleteProduct(productId) {
-  if (!confirm("Are you sure you want to delete this product?")) return;
-
-  products = products.filter((p) => p.id !== productId);
+function deleteProduct(id) {
+  if (!confirm("Delete this product?")) return;
+  products = products.filter((p) => p.id !== id);
   saveData();
   renderProducts(activeCategory);
   refreshAdminData();
@@ -752,22 +948,98 @@ function deleteProduct(productId) {
 }
 
 /* ============================================================
-   TOAST NOTIFICATION
-   ============================================================ */
+   ADMIN — CHANGE CREDENTIALS
+============================================================ */
+function saveAdminCredentials() {
+  const newUsername = document.getElementById("set-username").value.trim();
+  const currentPass = document.getElementById("set-current-pass").value;
+  const newPass = document.getElementById("set-new-pass").value;
+  const confirmPass = document.getElementById("set-confirm-pass").value;
+  const errEl = document.getElementById("settings-err");
+  const okEl = document.getElementById("settings-ok");
 
-function showToast(message, isError = false) {
-  const toast = document.getElementById("toast");
-  toast.textContent = message;
-  toast.className = "show" + (isError ? " error" : "");
+  errEl.style.display = "none";
+  okEl.style.display = "none";
 
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => {
-    toast.className = "";
-  }, 3000);
+  // Verify current password
+  if (currentPass !== ADMIN_PASSWORD) {
+    errEl.textContent = "Current password is incorrect.";
+    errEl.style.display = "block";
+    return;
+  }
+
+  if (!newUsername) {
+    errEl.textContent = "Username cannot be empty.";
+    errEl.style.display = "block";
+    return;
+  }
+
+  // If changing password, validate it
+  if (newPass) {
+    if (newPass.length < 6) {
+      errEl.textContent = "New password must be at least 6 characters.";
+      errEl.style.display = "block";
+      return;
+    }
+    if (newPass !== confirmPass) {
+      errEl.textContent = "New passwords do not match.";
+      errEl.style.display = "block";
+      return;
+    }
+    ADMIN_PASSWORD = newPass;
+    localStorage.setItem("gearx_adm_pass", ADMIN_PASSWORD);
+  }
+
+  ADMIN_USERNAME = newUsername;
+  localStorage.setItem("gearx_adm_user", ADMIN_USERNAME);
+
+  // Clear password fields
+  document.getElementById("set-current-pass").value = "";
+  document.getElementById("set-new-pass").value = "";
+  document.getElementById("set-confirm-pass").value = "";
+
+  okEl.textContent = "✅ Credentials updated successfully!";
+  okEl.style.display = "block";
+  showToast("Admin credentials saved!");
 }
 
 /* ============================================================
-   INITIALISE ON PAGE LOAD
-   ============================================================ */
-renderProducts(); // show products on storefront
-updateCartUI(); // set cart count to 0
+   ADMIN — STORE SETTINGS
+============================================================ */
+function saveStoreSettings() {
+  const name = document.getElementById("set-store-name").value.trim();
+  const shipping = parseFloat(document.getElementById("set-shipping").value);
+
+  if (!name) {
+    showToast("Store name cannot be empty.", true);
+    return;
+  }
+  if (isNaN(shipping) || shipping < 0) {
+    showToast("Invalid shipping fee.", true);
+    return;
+  }
+
+  SHIPPING_FEE = shipping;
+  localStorage.setItem("gearx_shipping", SHIPPING_FEE);
+  updateCartUI();
+  showToast("Store settings saved!");
+}
+
+/* ============================================================
+   TOAST
+============================================================ */
+function showToast(msg, isError = false) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "show" + (isError ? " error" : "");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => (t.className = ""), 3000);
+}
+
+/* ============================================================
+   INIT
+============================================================ */
+loadUserCart();
+renderProducts();
+updateCartUI();
+updateNavAuth();

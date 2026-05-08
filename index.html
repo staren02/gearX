@@ -12,25 +12,42 @@
 
 <!-- ============================================================
      STORE PAGE
-     ============================================================ -->
+============================================================ -->
 <div id="store-page">
-`
+
   <!-- NAV -->
   <nav id="navbar">
     <div class="nav-logo">GEAR<span>X</span></div>
-    <div class="nav-links">
-      <a href="#hero">Home</a>
-      <a href="#categories">Categories</a>
-      <a href="#products">Shop</a>
-      <a href="#promo">Deals</a>
+
+    <!-- Desktop links -->
+    <div class="nav-links" id="nav-links">
+      <a href="#hero" onclick="closeMenu()">Home</a>
+      <a href="#categories" onclick="closeMenu()">Categories</a>
+      <a href="#products" onclick="closeMenu()">Shop</a>
+      <a href="#promo" onclick="closeMenu()">Deals</a>
     </div>
+
     <div class="nav-right">
+      <!-- Auth button (shows username when logged in) -->
+      <button class="auth-nav-btn" id="auth-nav-btn" onclick="toggleAuthDrawer()">
+        <span id="auth-nav-label">🔑 Login</span>
+      </button>
+
+      <!-- Cart -->
       <button class="cart-btn" onclick="toggleCart()">
-        <span>🛒 Cart</span>
+        <span>🛒</span>
         <span class="cart-count" id="cart-count">0</span>
+      </button>
+
+      <!-- Hamburger (mobile only) -->
+      <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+        <span></span><span></span><span></span>
       </button>
     </div>
   </nav>
+
+  <!-- Mobile menu overlay -->
+  <div class="mobile-overlay" id="mobile-overlay" onclick="closeMenu()"></div>
 
   <!-- HERO -->
   <section id="hero">
@@ -71,30 +88,12 @@
       </div>
     </div>
     <div class="cat-grid reveal">
-      <div class="cat-card selected" onclick="filterCat('all', event)">
-        <span class="cat-emoji">🕹️</span>
-        <div class="cat-name">All</div>
-      </div>
-      <div class="cat-card" onclick="filterCat('Controllers', event)">
-        <span class="cat-emoji">🎮</span>
-        <div class="cat-name">Controllers</div>
-      </div>
-      <div class="cat-card" onclick="filterCat('Headsets', event)">
-        <span class="cat-emoji">🎧</span>
-        <div class="cat-name">Headsets</div>
-      </div>
-      <div class="cat-card" onclick="filterCat('Mice & KB', event)">
-        <span class="cat-emoji">🖱️</span>
-        <div class="cat-name">Mice & KB</div>
-      </div>
-      <div class="cat-card" onclick="filterCat('VR Gear', event)">
-        <span class="cat-emoji">🕶️</span>
-        <div class="cat-name">VR Gear</div>
-      </div>
-      <div class="cat-card" onclick="filterCat('Monitors', event)">
-        <span class="cat-emoji">🖥️</span>
-        <div class="cat-name">Monitors</div>
-      </div>
+      <div class="cat-card selected" onclick="filterCat('all', event)"><span class="cat-emoji">🕹️</span><div class="cat-name">All</div></div>
+      <div class="cat-card" onclick="filterCat('Controllers', event)"><span class="cat-emoji">🎮</span><div class="cat-name">Controllers</div></div>
+      <div class="cat-card" onclick="filterCat('Headsets', event)"><span class="cat-emoji">🎧</span><div class="cat-name">Headsets</div></div>
+      <div class="cat-card" onclick="filterCat('Mice & KB', event)"><span class="cat-emoji">🖱️</span><div class="cat-name">Mice & KB</div></div>
+      <div class="cat-card" onclick="filterCat('VR Gear', event)"><span class="cat-emoji">🕶️</span><div class="cat-name">VR Gear</div></div>
+      <div class="cat-card" onclick="filterCat('Monitors', event)"><span class="cat-emoji">🖥️</span><div class="cat-name">Monitors</div></div>
     </div>
   </section>
 
@@ -125,40 +124,117 @@
         <span class="nav-logo">GEAR<span>X</span></span>
         <p>Your go-to store for premium gaming gadgets. Fast delivery, real gear, zero compromise.</p>
       </div>
-      <div class="footer-col">
-        <h4>Shop</h4>
-        <a href="#">Controllers</a>
-        <a href="#">Headsets</a>
-        <a href="#">Mice & KB</a>
-        <a href="#">VR Gear</a>
-      </div>
-      <div class="footer-col">
-        <h4>Support</h4>
-        <a href="#">FAQ</a>
-        <a href="#">Shipping</a>
-        <a href="#">Returns</a>
-        <a href="#">Contact</a>
-      </div>
-      <div class="footer-col">
-        <h4>Company</h4>
-        <a href="#">About</a>
-        <a href="#">Blog</a>
-        <a href="#">Privacy</a>
-        <a href="#">Terms</a>
-      </div>
+      <div class="footer-col"><h4>Shop</h4><a href="#">Controllers</a><a href="#">Headsets</a><a href="#">Mice & KB</a><a href="#">VR Gear</a></div>
+      <div class="footer-col"><h4>Support</h4><a href="#">FAQ</a><a href="#">Shipping</a><a href="#">Returns</a><a href="#">Contact</a></div>
+      <div class="footer-col"><h4>Company</h4><a href="#">About</a><a href="#">Blog</a><a href="#">Privacy</a><a href="#">Terms</a></div>
     </div>
     <div class="footer-bottom">
       <p>© 2026 GearX. All rights reserved.</p>
       <a href="#" class="admin-link-foot" onclick="openAdminLogin(event)">Admin Portal</a>
     </div>
   </footer>
-
 </div><!-- end store-page -->
 
 
 <!-- ============================================================
+     AUTH DRAWER (Login / Register — slides from right)
+============================================================ -->
+<div id="auth-overlay" onclick="handleAuthOverlayClick(event)">
+  <div id="auth-drawer">
+    <div class="drawer-head">
+      <h2 id="auth-drawer-title">Welcome Back</h2>
+      <button class="cart-close" onclick="toggleAuthDrawer()">✕</button>
+    </div>
+
+    <!-- Tab switcher -->
+    <div class="auth-tabs">
+      <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Login</button>
+      <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Register</button>
+    </div>
+
+    <div class="auth-body">
+
+      <!-- LOGIN FORM -->
+      <div class="auth-form active" id="auth-login-form">
+        <p class="auth-hint">Sign in with your email or username</p>
+        <div class="auth-field">
+          <label>Email or Username</label>
+          <input type="text" id="login-identifier" placeholder="john@example.com or johndoe"/>
+        </div>
+        <div class="auth-field">
+          <label>Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="login-password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doClientLogin()"/>
+            <button class="pw-toggle" onclick="togglePw('login-password', this)">👁</button>
+          </div>
+        </div>
+        <div class="auth-err" id="login-err"></div>
+        <button class="auth-submit" onclick="doClientLogin()">Login →</button>
+        <p class="auth-switch">Don't have an account? <a href="#" onclick="switchAuthTab('register')">Register here</a></p>
+      </div>
+
+      <!-- REGISTER FORM -->
+      <div class="auth-form" id="auth-register-form">
+        <p class="auth-hint">Create your GearX account</p>
+        <div class="auth-row">
+          <div class="auth-field">
+            <label>First Name</label>
+            <input type="text" id="reg-fname" placeholder="John"/>
+          </div>
+          <div class="auth-field">
+            <label>Last Name</label>
+            <input type="text" id="reg-lname" placeholder="Doe"/>
+          </div>
+        </div>
+        <div class="auth-field">
+          <label>Username</label>
+          <input type="text" id="reg-username" placeholder="johndoe"/>
+        </div>
+        <div class="auth-field">
+          <label>Email Address</label>
+          <input type="email" id="reg-email" placeholder="john@example.com"/>
+        </div>
+        <div class="auth-field">
+          <label>Password</label>
+          <div class="pw-wrap">
+            <input type="password" id="reg-password" placeholder="Min. 6 characters"/>
+            <button class="pw-toggle" onclick="togglePw('reg-password', this)">👁</button>
+          </div>
+        </div>
+        <div class="auth-field">
+          <label>Confirm Password</label>
+          <input type="password" id="reg-confirm" placeholder="Repeat password" onkeydown="if(event.key==='Enter')doRegister()"/>
+        </div>
+        <div class="auth-err" id="register-err"></div>
+        <button class="auth-submit" onclick="doRegister()">Create Account →</button>
+        <p class="auth-switch">Already have an account? <a href="#" onclick="switchAuthTab('login')">Login here</a></p>
+      </div>
+
+      <!-- LOGGED IN STATE -->
+      <div class="auth-form" id="auth-loggedin-form">
+        <div class="user-welcome">
+          <div class="user-avatar" id="user-avatar">G</div>
+          <div class="user-info">
+            <div class="user-name" id="user-display-name">Guest</div>
+            <div class="user-email" id="user-display-email">—</div>
+          </div>
+        </div>
+        <div class="user-stats">
+          <div class="ustat"><span class="ustat-val" id="ustat-orders">0</span><span class="ustat-label">Orders</span></div>
+          <div class="ustat"><span class="ustat-val" id="ustat-cart">0</span><span class="ustat-label">In Cart</span></div>
+        </div>
+        <button class="auth-submit outline" onclick="toggleAuthDrawer(); scrollToSection('products')">Continue Shopping</button>
+        <button class="auth-logout-btn" onclick="doClientLogout()">Logout</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ============================================================
      CART DRAWER
-     ============================================================ -->
+============================================================ -->
 <div id="cart-overlay" onclick="handleOverlayClick(event)">
   <div id="cart-drawer">
     <div class="cart-head">
@@ -176,7 +252,7 @@
 
 <!-- ============================================================
      CHECKOUT MODAL
-     ============================================================ -->
+============================================================ -->
 <div id="checkout-modal">
   <div class="checkout-box">
     <div class="checkout-header">
@@ -184,8 +260,6 @@
       <button class="cart-close" onclick="closeCheckout()">✕</button>
     </div>
     <div class="checkout-body">
-
-      <!-- Step indicator dots -->
       <div class="steps-indicator">
         <div class="step-dot active" id="sdot-1"></div>
         <div class="step-dot" id="sdot-2"></div>
@@ -193,78 +267,50 @@
         <span class="step-text" id="step-text-label">Shipping Details</span>
       </div>
 
-      <!-- STEP 1: Shipping Details -->
+      <!-- STEP 1 -->
       <div class="checkout-step active" id="step-1">
         <p class="step-label">Step 1 — Shipping Details</p>
         <div class="form-row">
-          <div class="field">
-            <label>First Name</label>
-            <input type="text" id="sh-fname" placeholder="John"/>
-          </div>
-          <div class="field">
-            <label>Last Name</label>
-            <input type="text" id="sh-lname" placeholder="Doe"/>
-          </div>
+          <div class="field"><label>First Name</label><input type="text" id="sh-fname" placeholder="John"/></div>
+          <div class="field"><label>Last Name</label><input type="text" id="sh-lname" placeholder="Doe"/></div>
         </div>
         <div class="form-row full">
-          <div class="field">
-            <label>Phone Number</label>
-            <input type="tel" id="sh-phone" placeholder="+1 234 567 8900"/>
-          </div>
+          <div class="field"><label>Phone Number</label><input type="tel" id="sh-phone" placeholder="+1 234 567 8900"/></div>
         </div>
         <div class="form-row full">
-          <div class="field">
-            <label>Street Address</label>
-            <input type="text" id="sh-address" placeholder="123 Main Street, Apt 4B"/>
-          </div>
+          <div class="field"><label>Street Address</label><input type="text" id="sh-address" placeholder="123 Main Street"/></div>
         </div>
         <div class="form-row">
-          <div class="field">
-            <label>City</label>
-            <input type="text" id="sh-city" placeholder="New York"/>
-          </div>
+          <div class="field"><label>City</label><input type="text" id="sh-city" placeholder="New York"/></div>
           <div class="field">
             <label>Country</label>
             <select id="sh-country">
               <option value="">Select country</option>
-              <option>United States</option>
-              <option>United Kingdom</option>
-              <option>Canada</option>
-              <option>Australia</option>
-              <option>Germany</option>
-              <option>France</option>
-              <option>Nigeria</option>
-              <option>South Africa</option>
-              <option>Kenya</option>
-              <option>Ghana</option>
-              <option>Cameroon</option>
-              <option>Other</option>
+              <option>United States</option><option>United Kingdom</option><option>Canada</option>
+              <option>Australia</option><option>Germany</option><option>France</option>
+              <option>Nigeria</option><option>South Africa</option><option>Kenya</option>
+              <option>Ghana</option><option>Cameroon</option><option>Other</option>
             </select>
           </div>
         </div>
         <div class="step-actions">
-          <button class="btn-next" onclick="goStep(2)">Continue to Order Review →</button>
+          <button class="btn-next" onclick="goStep(2)">Continue to Review →</button>
         </div>
       </div>
 
-      <!-- STEP 2: Order Review -->
+      <!-- STEP 2 -->
       <div class="checkout-step" id="step-2">
         <p class="step-label">Step 2 — Review Your Order</p>
         <div class="order-summary-mini" id="order-review"></div>
-        <div class="delivery-preview-box">
-          <strong>Delivering to:</strong>
-          <span id="delivery-address-preview"></span>
-        </div>
-        <div class="paypal-note">
-          💳 Payment via PayPal — secure checkout. You will be redirected to PayPal to complete payment.
-        </div>
+        <div class="delivery-preview-box"><strong>Delivering to:</strong><span id="delivery-address-preview"></span></div>
+        <div class="paypal-note">💳 Payment via PayPal — secure checkout.</div>
         <div class="step-actions">
           <button class="btn-back" onclick="goStep(1)">← Back</button>
           <button class="btn-next" onclick="goStep(3)">Proceed to Payment →</button>
         </div>
       </div>
 
-      <!-- STEP 3: PayPal Payment -->
+      <!-- STEP 3 -->
       <div class="checkout-step" id="step-3">
         <p class="step-label">Step 3 — Pay with PayPal</p>
         <div class="order-summary-mini" id="paypal-order-summary"></div>
@@ -274,18 +320,17 @@
         </div>
       </div>
 
-      <!-- STEP 4: Success Screen -->
+      <!-- STEP 4: Success -->
       <div class="checkout-step" id="step-4">
         <div class="success-screen">
           <span class="success-icon">🎉</span>
           <h3>Order Confirmed!</h3>
           <p>Your payment was successful. Your gaming gear is on its way!</p>
           <div class="order-ref" id="order-ref-display"></div>
-          <p class="delivery-note">We'll send a confirmation to your shipping address. Estimated delivery: <strong>3–7 business days</strong></p>
+          <p class="delivery-note">Estimated delivery: <strong>3–7 business days</strong></p>
           <button class="btn-next full-btn" onclick="closeCheckout(); clearCart();">Continue Shopping</button>
         </div>
       </div>
-
     </div>
   </div>
 </div>
@@ -293,7 +338,7 @@
 
 <!-- ============================================================
      ADMIN LOGIN MODAL
-     ============================================================ -->
+============================================================ -->
 <div id="login-modal">
   <div class="login-box">
     <span class="nav-logo">GEAR<span>X</span></span>
@@ -304,8 +349,7 @@
     </div>
     <div class="login-field">
       <label>Password</label>
-      <input type="password" id="adm-pass" placeholder="••••••••"
-             onkeydown="if(event.key==='Enter') doLogin()"/>
+      <input type="password" id="adm-pass" placeholder="••••••••" onkeydown="if(event.key==='Enter') doLogin()"/>
     </div>
     <button class="login-btn" onclick="doLogin()">Enter Dashboard</button>
     <div class="login-err" id="login-err">Invalid credentials. Try again.</div>
@@ -315,52 +359,47 @@
 
 
 <!-- ============================================================
-     ADMIN DASHBOARD PAGE
-     ============================================================ -->
+     ADMIN DASHBOARD
+============================================================ -->
 <div id="admin-page">
 
   <nav class="adm-nav">
-    <span class="adm-nav-logo">GEAR<span>X</span> Admin</span>
+    <div class="adm-nav-left">
+      <!-- Mobile sidebar toggle -->
+      <button class="adm-hamburger" id="adm-hamburger" onclick="toggleAdmSidebar()">☰</button>
+      <span class="adm-nav-logo">GEAR<span>X</span> Admin</span>
+    </div>
     <div class="adm-nav-right">
       <span id="adm-date"></span>
       <button class="adm-logout" onclick="logoutAdmin()">Logout</button>
     </div>
   </nav>
 
-  <div class="adm-body">
+  <!-- Mobile sidebar overlay -->
+  <div class="adm-sidebar-overlay" id="adm-sidebar-overlay" onclick="closeAdmSidebar()"></div>
 
-    <!-- Sidebar -->
-    <aside class="adm-sidebar">
+  <div class="adm-body">
+    <aside class="adm-sidebar" id="adm-sidebar">
       <ul class="adm-menu">
         <li><a href="#" class="active" onclick="showAdmSection('dashboard', this)">📊 Dashboard</a></li>
         <li><a href="#" onclick="showAdmSection('products', this)">📦 Products</a></li>
         <li><a href="#" onclick="showAdmSection('orders', this)">📋 Orders</a></li>
+        <li><a href="#" onclick="showAdmSection('clients', this)">👥 Clients</a></li>
+        <li><a href="#" onclick="showAdmSection('settings', this)">⚙️ Settings</a></li>
       </ul>
     </aside>
 
-    <!-- Main content -->
     <main class="adm-main">
 
-      <!-- DASHBOARD SECTION -->
+      <!-- DASHBOARD -->
       <div class="adm-section active" id="adm-dashboard">
         <h1 class="adm-page-title">Dashboard</h1>
         <div class="adm-stats">
-          <div class="stat-card blue">
-            <div class="s-label">Total Products</div>
-            <div class="s-val" id="stat-prods">0</div>
-          </div>
-          <div class="stat-card">
-            <div class="s-label">Categories</div>
-            <div class="s-val">6</div>
-          </div>
-          <div class="stat-card red">
-            <div class="s-label">Orders</div>
-            <div class="s-val" id="stat-orders">0</div>
-          </div>
-          <div class="stat-card">
-            <div class="s-label">Revenue</div>
-            <div class="s-val" id="stat-rev">$0</div>
-          </div>
+          <div class="stat-card blue"><div class="s-label">Products</div><div class="s-val" id="stat-prods">0</div></div>
+          <div class="stat-card"><div class="s-label">Categories</div><div class="s-val">6</div></div>
+          <div class="stat-card red"><div class="s-label">Orders</div><div class="s-val" id="stat-orders">0</div></div>
+          <div class="stat-card"><div class="s-label">Revenue</div><div class="s-val" id="stat-rev">$0</div></div>
+          <div class="stat-card"><div class="s-label">Clients</div><div class="s-val" id="stat-clients">0</div></div>
         </div>
         <div class="adm-card">
           <div class="adm-card-head"><h3>Recent Orders</h3></div>
@@ -368,7 +407,7 @@
         </div>
       </div>
 
-      <!-- PRODUCTS SECTION -->
+      <!-- PRODUCTS -->
       <div class="adm-section" id="adm-products">
         <h1 class="adm-page-title">Products</h1>
         <div class="adm-card">
@@ -379,34 +418,91 @@
           <div class="adm-search">
             <input type="text" id="prod-search" placeholder="Search products..." oninput="renderAdmTable()"/>
           </div>
-          <table class="adm-table">
-            <thead>
-              <tr>
-                <th>Icon</th><th>Name</th><th>Category</th>
-                <th>Price</th><th>Status</th><th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="adm-prod-tbody"></tbody>
-          </table>
+          <div class="table-scroll">
+            <table class="adm-table">
+              <thead><tr><th>Icon</th><th>Name</th><th>Category</th><th>Price</th><th>Status</th><th>Actions</th></tr></thead>
+              <tbody id="adm-prod-tbody"></tbody>
+            </table>
+          </div>
         </div>
       </div>
 
-      <!-- ORDERS SECTION -->
+      <!-- ORDERS -->
       <div class="adm-section" id="adm-orders">
         <h1 class="adm-page-title">Orders</h1>
         <div class="adm-card">
-          <div class="adm-card-head">
-            <h3>All Orders (<span id="orders-count-label">0</span>)</h3>
+          <div class="adm-card-head"><h3>All Orders (<span id="orders-count-label">0</span>)</h3></div>
+          <div class="table-scroll">
+            <table class="adm-table">
+              <thead><tr><th>Order #</th><th>Customer</th><th>Items</th><th>Total</th><th>City</th><th>Date</th><th>Status</th></tr></thead>
+              <tbody id="adm-orders-tbody"></tbody>
+            </table>
           </div>
-          <table class="adm-table">
-            <thead>
-              <tr>
-                <th>Order #</th><th>Customer</th><th>Items</th>
-                <th>Total</th><th>City</th><th>Date</th><th>Status</th>
-              </tr>
-            </thead>
-            <tbody id="adm-orders-tbody"></tbody>
-          </table>
+        </div>
+      </div>
+
+      <!-- CLIENTS -->
+      <div class="adm-section" id="adm-clients">
+        <h1 class="adm-page-title">Clients</h1>
+        <div class="adm-card">
+          <div class="adm-card-head"><h3>Registered Clients (<span id="clients-count-label">0</span>)</h3></div>
+          <div class="table-scroll">
+            <table class="adm-table">
+              <thead><tr><th>Name</th><th>Username</th><th>Email</th><th>Joined</th><th>Orders</th></tr></thead>
+              <tbody id="adm-clients-tbody"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- SETTINGS -->
+      <div class="adm-section" id="adm-settings">
+        <h1 class="adm-page-title">Settings</h1>
+
+        <!-- Change Admin Credentials -->
+        <div class="adm-card">
+          <div class="adm-card-head"><h3>Admin Credentials</h3></div>
+          <p class="settings-note">Update your admin login username and password below.</p>
+          <div class="settings-form">
+            <div class="pm-field">
+              <label>New Username</label>
+              <input type="text" id="set-username" placeholder="Enter new username"/>
+            </div>
+            <div class="pm-field">
+              <label>Current Password (required to save)</label>
+              <div class="pw-wrap dark">
+                <input type="password" id="set-current-pass" placeholder="Your current password"/>
+                <button class="pw-toggle dark" onclick="togglePw('set-current-pass', this)">👁</button>
+              </div>
+            </div>
+            <div class="pm-field">
+              <label>New Password</label>
+              <div class="pw-wrap dark">
+                <input type="password" id="set-new-pass" placeholder="Leave blank to keep current"/>
+                <button class="pw-toggle dark" onclick="togglePw('set-new-pass', this)">👁</button>
+              </div>
+            </div>
+            <div class="pm-field">
+              <label>Confirm New Password</label>
+              <div class="pw-wrap dark">
+                <input type="password" id="set-confirm-pass" placeholder="Repeat new password"/>
+                <button class="pw-toggle dark" onclick="togglePw('set-confirm-pass', this)">👁</button>
+              </div>
+            </div>
+            <div class="auth-err" id="settings-err" style="margin-bottom:12px;"></div>
+            <div class="auth-err" id="settings-ok" style="margin-bottom:12px;color:#22c55e;display:none;"></div>
+            <button class="adm-btn-red" onclick="saveAdminCredentials()">Save Changes</button>
+          </div>
+        </div>
+
+        <!-- Store Info -->
+        <div class="adm-card">
+          <div class="adm-card-head"><h3>Store Info</h3></div>
+          <div class="settings-form">
+            <div class="pm-field"><label>Store Name</label><input type="text" id="set-store-name" value="GearX" placeholder="Store name"/></div>
+            <div class="pm-field"><label>Shipping Fee (USD)</label><input type="number" id="set-shipping" value="5" min="0" step="0.5"/></div>
+            <button class="adm-btn-blue" onclick="saveStoreSettings()">Save Store Settings</button>
+          </div>
         </div>
       </div>
 
@@ -417,7 +513,7 @@
 
 <!-- ============================================================
      ADD / EDIT PRODUCT MODAL
-     ============================================================ -->
+============================================================ -->
 <div id="prod-modal">
   <div class="prod-modal-box">
     <div class="prod-modal-head">
@@ -427,51 +523,28 @@
     <div class="prod-modal-body">
       <input type="hidden" id="pm-id"/>
       <div class="pm-row">
-        <div class="pm-field">
-          <label>Product Name</label>
-          <input type="text" id="pm-name" placeholder="e.g. ProSound X9"/>
-        </div>
+        <div class="pm-field"><label>Product Name</label><input type="text" id="pm-name" placeholder="e.g. ProSound X9"/></div>
         <div class="pm-field">
           <label>Category</label>
           <select id="pm-cat">
-            <option>Controllers</option>
-            <option>Headsets</option>
-            <option>Mice & KB</option>
-            <option>VR Gear</option>
-            <option>Monitors</option>
-            <option>Chairs</option>
+            <option>Controllers</option><option>Headsets</option>
+            <option>Mice & KB</option><option>VR Gear</option>
+            <option>Monitors</option><option>Chairs</option>
           </select>
         </div>
       </div>
       <div class="pm-row">
-        <div class="pm-field">
-          <label>Price (USD)</label>
-          <input type="number" id="pm-price" placeholder="0.00" step="0.01" min="0"/>
-        </div>
+        <div class="pm-field"><label>Price (USD)</label><input type="number" id="pm-price" placeholder="0.00" step="0.01" min="0"/></div>
         <div class="pm-field">
           <label>Badge</label>
-          <select id="pm-badge">
-            <option value="">None</option>
-            <option value="new">New</option>
-            <option value="hot">Hot</option>
-            <option value="sale">Sale</option>
-          </select>
+          <select id="pm-badge"><option value="">None</option><option value="new">New</option><option value="hot">Hot</option><option value="sale">Sale</option></select>
         </div>
       </div>
-      <div class="pm-field">
-        <label>Emoji Icon</label>
-        <input type="text" id="pm-icon" placeholder="🎮"/>
-      </div>
-      <div class="pm-field">
-        <label>Description</label>
-        <textarea id="pm-desc" placeholder="Short product description..."></textarea>
-      </div>
+      <div class="pm-field"><label>Emoji Icon</label><input type="text" id="pm-icon" placeholder="🎮"/></div>
+      <div class="pm-field"><label>Description</label><textarea id="pm-desc" placeholder="Short product description..."></textarea></div>
       <div class="pm-field">
         <label>Status</label>
-        <select id="pm-status">
-          <option value="active">Active</option>
-          <option value="inactive">Inactive</option>
-        </select>
+        <select id="pm-status"><option value="active">Active</option><option value="inactive">Inactive</option></select>
       </div>
       <div class="pm-actions">
         <button class="pm-cancel" onclick="closeProdModal()">Cancel</button>
@@ -481,12 +554,9 @@
   </div>
 </div>
 
-
-<!-- Toast notification -->
+<!-- Toast -->
 <div id="toast"></div>
 
-<!-- JavaScript (loaded last so the page HTML is ready first) -->
 <script src="script.js"></script>
-
 </body>
 </html>
