@@ -524,14 +524,14 @@ footer { background:var(--dark); border-top:1px solid var(--border); padding:48p
 
   /* Nav */
   .nav-links {
-    position: fixed; top: 64px; left: 0; right: 0;
+    position: fixed; top: 32px; left: 0; right: 0;
     background: rgba(8,8,16,0.98); backdrop-filter: blur(12px);
     flex-direction: column; gap: 0; z-index: 950;
     border-bottom: 1px solid var(--border);
     transform: translateY(-110%); transition: transform 0.3s ease;
     padding: 8px 0;
   }
-  .nav-links.open { transform: translateY(0); }
+  .nav-links.open { transform: translateZ(0); }
   .nav-links a { padding: 14px 24px; font-size: 15px; border-bottom: 1px solid var(--border); }
   .nav-links a:last-child { border-bottom: none; }
 
